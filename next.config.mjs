@@ -147,6 +147,14 @@ const nextConfig = {
         path: "**/open-sse/services/compression/**",
         description: /Overly broad patterns can lead to build performance issues/,
       },
+      // sql.js/package.json is resolved at runtime via createRequire() in
+      // sqljsAdapter.ts (the string is split to evade static analysis, but
+      // Turbopack resolves it anyway). The try/catch handles the case where
+      // sql.js is absent; this is a known-benign warning. (#8135)
+      {
+        path: "**/src/lib/db/adapters/sqljsAdapter.ts",
+        description: /Can't resolve 'sql\.js\/package\.json'/,
+      },
     ],
   },
   output: "standalone",
@@ -287,6 +295,13 @@ const nextConfig = {
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
       isNextIntlExtractorDynamicImportWarning,
+      // sql.js/package.json is resolved at runtime via createRequire() in
+      // sqljsAdapter.ts. The string is split ("sql.js" + "/package.json") to
+      // evade static analysis, but webpack still traces it. The resolve is
+      // wrapped in try/catch for optional-dependency safety. (#8135)
+      (warning) =>
+        typeof warning?.message === "string" &&
+        warning.message.includes("Can't resolve 'sql.js/package.json'"),
     ];
     config.optimization = config.optimization || {};
     config.optimization.splitChunks = {
