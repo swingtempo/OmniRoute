@@ -177,6 +177,7 @@ const ProviderCard = forwardRef<ProviderCardHandle, ProviderCardProps>(function 
       },
       highlight() {
         const el = innerRef.current;
+        if (!el) return;
         (el.firstElementChild as HTMLElement)?.focus();
         const surface = el.firstElementChild?.firstElementChild as HTMLElement | undefined;
         surface?.animate(
