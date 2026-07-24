@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent, ReactNode } from "react";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -74,7 +74,6 @@ interface ProviderCardProps {
   stats: ProviderStats;
   authType?: string;
   onToggle: (active: boolean) => void;
-  shouldHighlight?: boolean;
   onBeforeNavigate?: (id: string) => void;
 }
 
@@ -154,8 +153,14 @@ function getStatusDisplay(
   return parts;
 }
 
-const ProviderCard = forwardRef<HTMLDivElement, ProviderCardProps>(function ProviderCard(
-  { providerId, provider, stats, authType = "apikey", onToggle, shouldHighlight, onBeforeNavigate },
+export type ProviderCardHandle = {
+  highlight: () => void;
+  getProviderId(): string;
+  scrollIntoView: (options?: ScrollIntoViewOptions) => void;
+};
+
+const ProviderCard = forwardRef<ProviderCardHandle, ProviderCardProps>(function ProviderCard(
+  { providerId, provider, stats, authType = "apikey", onToggle, onBeforeNavigate },
   ref
 ) {
   const t = useTranslations("providers");
@@ -163,27 +168,34 @@ const ProviderCard = forwardRef<HTMLDivElement, ProviderCardProps>(function Prov
   const tp = useTranslations("miniPlayground");
   const [testExpanded, setTestExpanded] = useState<boolean>(false);
   const innerRef = useRef<HTMLDivElement>(null);
-  useImperativeHandle(ref, () => innerRef.current, []);
 
-  useEffect(() => {
-    // Handle the case where the parent wants the card to be highlighted
-    // so the user's eye will be drawn to this card.
-    // There is a small animation that comes in and fades away.
-    if (!shouldHighlight) {
-      return;
-    }
-
-    const surface = innerRef.current?.firstElementChild?.firstElementChild as
-      HTMLElement | undefined;
-    surface?.animate(
-      [
-        { backgroundColor: "rgba(59,130,246,0.22)" },
-        { backgroundColor: "rgba(59,130,246,0.08)" },
-        { backgroundColor: "transparent" },
-      ],
-      { duration: 2500, easing: "ease-in-out" }
-    );
-  }, [shouldHighlight, providerId, innerRef]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      getProviderId() {
+        return providerId;
+      },
+      highlight() {
+        const el = innerRef.current;
+        const surface = el.firstElementChild?.firstElementChild as HTMLElement | undefined;
+        surface?.animate(
+          [
+            { backgroundColor: "rgba(59,130,246,0.22)" },
+            { backgroundColor: "rgba(59,130,246,0.08)" },
+            { backgroundColor: "rgba(59,130,246,0.22)" },
+            { backgroundColor: "transparent" },
+          ],
+          { duration: 3000, easing: "ease-in-out" }
+        );
+      },
+      scrollIntoView() {
+        const el = innerRef.current;
+        if (!el) return;
+        el.scrollIntoView({ behavior: "auto", block: "center" });
+      },
+    }),
+    [providerId]
+  );
 
   // Show the Test button for LLM providers (when serviceKinds includes "llm"
   // OR when the provider has no explicit serviceKinds but is a regular LLM provider

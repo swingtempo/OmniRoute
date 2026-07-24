@@ -50,6 +50,7 @@ import { CategoryDot } from "./components/CategoryDot";
 import { ImportProvidersFromFileModal } from "./components/ImportProvidersFromFileModal";
 import NoAuthProvidersSection from "./components/NoAuthProvidersSection";
 import ProviderCard from "./components/ProviderCard";
+import type { ProviderCardHandle } from "./components/ProviderCard";
 import ProviderCountBadge from "./components/ProviderCountBadge";
 import ProviderSummaryCard from "./components/ProviderSummaryCard";
 import {
@@ -216,12 +217,13 @@ export default function ProvidersPage() {
   }, []);
 
   const highlightedCardRef = useCallback(
-    // This gets invoked when the ref is assigned. We check to see if the card is the one that should be highlighted, and if so, we scroll it into view.
-    (node: HTMLDivElement | null) => {
-      if (node && highlightedProviderId && node.id === `provider-${highlightedProviderId}`) {
-        node.scrollIntoView({ behavior: "auto", block: "center" });
+    (handle: ProviderCardHandle | null) => {
+      if (handle?.getProviderId() === highlightedProviderId) {
+        // we should scroll this card into view and highlight it
+        handle?.scrollIntoView({ behavior: "auto", block: "center" });
+        handle?.highlight();
       }
-      setHighlightedProviderId(null); // Clear the highlighted provider ID so we don't keep scrolling to it on re-renders
+      setHighlightedProviderId(null);
     },
     [highlightedProviderId, setHighlightedProviderId]
   );
@@ -938,7 +940,7 @@ export default function ProvidersPage() {
                 onToggle={(active) =>
                   handleToggleProvider(entry.providerId, entry.toggleAuthType, active)
                 }
-                shouldHighlight={entry.providerId === highlightedProviderId}
+
                 onBeforeNavigate={handleProviderNavigate}
                 ref={highlightedCardRef}
               />
@@ -1027,7 +1029,7 @@ export default function ProvidersPage() {
                         onToggle={(active) =>
                           handleToggleProvider(providerId, toggleAuthType, active)
                         }
-                        shouldHighlight={providerId === highlightedProviderId}
+
                         onBeforeNavigate={handleProviderNavigate}
                         ref={highlightedCardRef}
                       />
@@ -1104,7 +1106,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
@@ -1165,7 +1167,7 @@ export default function ProvidersPage() {
                         onToggle={(active) =>
                           handleToggleProvider(providerId, toggleAuthType, active)
                         }
-                        shouldHighlight={providerId === highlightedProviderId}
+
                         onBeforeNavigate={handleProviderNavigate}
                         ref={highlightedCardRef}
                       />
@@ -1216,7 +1218,7 @@ export default function ProvidersPage() {
                     stats={stats}
                     authType="web-cookie"
                     onToggle={(active) => handleToggleProvider(providerId, toggleAuthType, active)}
-                    shouldHighlight={providerId === highlightedProviderId}
+
                     onBeforeNavigate={handleProviderNavigate}
                     ref={highlightedCardRef}
                   />
@@ -1267,7 +1269,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
@@ -1323,7 +1325,7 @@ export default function ProvidersPage() {
                           onToggle={(active) =>
                             handleToggleProvider(providerId, toggleAuthType, active)
                           }
-                          shouldHighlight={providerId === highlightedProviderId}
+
                           onBeforeNavigate={handleProviderNavigate}
                           ref={highlightedCardRef}
                         />
@@ -1392,7 +1394,7 @@ export default function ProvidersPage() {
                     stats={stats}
                     authType="upstream-proxy"
                     onToggle={(active) => handleToggleProvider(providerId, toggleAuthType, active)}
-                    shouldHighlight={providerId === highlightedProviderId}
+
                     onBeforeNavigate={handleProviderNavigate}
                     ref={highlightedCardRef}
                   />
@@ -1427,7 +1429,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
@@ -1463,7 +1465,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
@@ -1499,7 +1501,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
@@ -1552,7 +1554,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
@@ -1602,7 +1604,7 @@ export default function ProvidersPage() {
                     stats={stats}
                     authType="local"
                     onToggle={(active) => handleToggleProvider(providerId, toggleAuthType, active)}
-                    shouldHighlight={providerId === highlightedProviderId}
+
                     onBeforeNavigate={handleProviderNavigate}
                     ref={highlightedCardRef}
                   />
@@ -1651,7 +1653,7 @@ export default function ProvidersPage() {
                     stats={stats}
                     authType="search"
                     onToggle={(active) => handleToggleProvider(providerId, toggleAuthType, active)}
-                    shouldHighlight={providerId === highlightedProviderId}
+
                     onBeforeNavigate={handleProviderNavigate}
                     ref={highlightedCardRef}
                   />
@@ -1686,7 +1688,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
@@ -1722,7 +1724,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
@@ -1772,7 +1774,7 @@ export default function ProvidersPage() {
                     stats={stats}
                     authType="audio"
                     onToggle={(active) => handleToggleProvider(providerId, toggleAuthType, active)}
-                    shouldHighlight={providerId === highlightedProviderId}
+
                     onBeforeNavigate={handleProviderNavigate}
                     ref={highlightedCardRef}
                   />
@@ -1807,7 +1809,7 @@ export default function ProvidersPage() {
                       onToggle={(active) =>
                         handleToggleProvider(providerId, toggleAuthType, active)
                       }
-                      shouldHighlight={providerId === highlightedProviderId}
+
                       onBeforeNavigate={handleProviderNavigate}
                       ref={highlightedCardRef}
                     />
