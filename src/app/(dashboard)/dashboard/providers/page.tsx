@@ -34,6 +34,7 @@ import {
   loadProviderPageData,
 } from "./providerPageUtils";
 import type { ProviderEntry } from "./providerPageUtils";
+import { recordProviderNavigation, resolveHighlightedCard } from "./providerPageHighlightUtils";
 import {
   readProviderDisplayModePreference,
   shouldSyncProviderDisplayMode,
@@ -213,19 +214,12 @@ export default function ProvidersPage() {
   });
 
   const handleCardClick = useCallback((id: string) => {
-    // upon navigating to a provider, we want to set the providerId in the history state
-    // so that if the user refreshes the page, we can scroll it into view and highlight the provider card
-    window.history.replaceState({ providerId: id }, "");
+    recordProviderNavigation(id);
   }, []);
 
   const highlightedCardRef = useCallback(
     (handle: ProviderCardHandle | null) => {
-      if (handle?.getProviderId() === highlightedProviderId) {
-        // we should scroll this card into view and highlight it
-        handle?.scrollIntoView({ behavior: "auto", block: "center" });
-        handle?.highlight();
-      }
-      setHighlightedProviderId(null);
+      resolveHighlightedCard(handle, highlightedProviderId, () => setHighlightedProviderId(null));
     },
     [highlightedProviderId, setHighlightedProviderId]
   );
