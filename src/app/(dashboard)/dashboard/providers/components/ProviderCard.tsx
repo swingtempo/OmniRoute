@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent, ReactNode } from "react";
-import { useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -74,6 +74,8 @@ interface ProviderCardProps {
   stats: ProviderStats;
   authType?: string;
   onToggle: (active: boolean) => void;
+  shouldHighlight?: boolean;
+  onBeforeNavigate?: (id: string) => void;
 }
 
 const DOT_COLORS: Record<string, string> = {
@@ -152,17 +154,36 @@ function getStatusDisplay(
   return parts;
 }
 
-export default function ProviderCard({
-  providerId,
-  provider,
-  stats,
-  authType = "apikey",
-  onToggle,
-}: ProviderCardProps) {
+const ProviderCard = forwardRef<HTMLDivElement, ProviderCardProps>(function ProviderCard(
+  { providerId, provider, stats, authType = "apikey", onToggle, shouldHighlight, onBeforeNavigate },
+  ref
+) {
   const t = useTranslations("providers");
   const tc = useTranslations("common");
   const tp = useTranslations("miniPlayground");
   const [testExpanded, setTestExpanded] = useState<boolean>(false);
+  const innerRef = useRef<HTMLDivElement>(null);
+  useImperativeHandle(ref, () => innerRef.current, []);
+
+  useEffect(() => {
+    // Handle the case where the parent wants the card to be highlighted
+    // so the user's eye will be drawn to this card.
+    // There is a small animation that comes in and fades away.
+    if (!shouldHighlight) {
+      return;
+    }
+
+    const surface = innerRef.current?.firstElementChild?.firstElementChild as
+      HTMLElement | undefined;
+    surface?.animate(
+      [
+        { backgroundColor: "rgba(59,130,246,0.22)" },
+        { backgroundColor: "rgba(59,130,246,0.08)" },
+        { backgroundColor: "transparent" },
+      ],
+      { duration: 2500, easing: "ease-in-out" }
+    );
+  }, [shouldHighlight, providerId, innerRef]);
 
   // Show the Test button for LLM providers (when serviceKinds includes "llm"
   // OR when the provider has no explicit serviceKinds but is a regular LLM provider
@@ -260,9 +281,17 @@ export default function ProviderCard({
     onToggle(allDisabled);
   };
 
+  const handleCardClick = useCallback(() => {
+    onBeforeNavigate?.(providerId);
+  }, [onBeforeNavigate, providerId]);
+
   return (
-    <div className="flex flex-col h-full">
-      <Link href={`/dashboard/providers/${providerId}`} className="group flex-1 flex flex-col">
+    <div ref={innerRef} id={`provider-${providerId}`} className="flex flex-col h-full">
+      <Link
+        href={`/dashboard/providers/${providerId}`}
+        className="group flex-1 flex flex-col focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60"
+        onClick={handleCardClick}
+      >
         <Card
           padding="xs"
           className={`h-full flex flex-col hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer ${
@@ -422,7 +451,7 @@ export default function ProviderCard({
                     <Toggle
                       size="xs"
                       checked={!allDisabled}
-                      onChange={() => {}}
+                      onChange={undefined}
                       title={allDisabled ? t("enableProvider") : t("disableProvider")}
                     />
                   </div>
@@ -461,4 +490,6 @@ export default function ProviderCard({
       )}
     </div>
   );
-}
+});
+
+export default ProviderCard;
